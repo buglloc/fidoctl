@@ -3,6 +3,7 @@ package fidoctl
 import (
 	"bytes"
 	"encoding/asn1"
+	"encoding/binary"
 	"fmt"
 )
 
@@ -35,11 +36,11 @@ const (
 	ConfigTagStmVersion       = 0x21
 )
 
-type FidoConfig struct {
+type YubiConfig struct {
 	tags map[int][]byte
 }
 
-func (c *FidoConfig) Marshal() ([]byte, error) {
+func (c *YubiConfig) Marshal() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteByte(0xff)
 	for tag, data := range c.tags {
@@ -62,7 +63,7 @@ func (c *FidoConfig) Marshal() ([]byte, error) {
 	return out, nil
 }
 
-func (c *FidoConfig) Unmarshal(data []byte) error {
+func (c *YubiConfig) Unmarshal(data []byte) error {
 	c.tags = make(map[int][]byte)
 
 	var cfg asn1.RawValue
@@ -86,16 +87,16 @@ func (c *FidoConfig) Unmarshal(data []byte) error {
 	return nil
 }
 
-func (c *FidoConfig) Has(tag int) bool {
+func (c *YubiConfig) Has(tag int) bool {
 	_, ok := c.tags[tag]
 	return ok
 }
 
-func (c *FidoConfig) Get(tag int) []byte {
+func (c *YubiConfig) Get(tag int) []byte {
 	return c.tags[tag]
 }
 
-func (c *FidoConfig) Set(tag int, data []byte) *FidoConfig {
+func (c *YubiConfig) Set(tag int, data []byte) *YubiConfig {
 	if c.tags == nil {
 		c.tags = make(map[int][]byte)
 	}
@@ -103,4 +104,46 @@ func (c *FidoConfig) Set(tag int, data []byte) *FidoConfig {
 	c.tags[tag] = data
 
 	return c
+}
+
+func (c *YubiConfig) Clear() *YubiConfig {
+	c.tags = make(map[int][]byte)
+
+	return c
+}
+
+func (c *YubiConfig) Version() Version {
+	rawVersion := c.tags[ConfigTagVersion]
+	if len(rawVersion) != 3 {
+		return Version{}
+	}
+
+	return Version{
+		Major: int(rawVersion[0]),
+		Minor: int(rawVersion[1]),
+		Patch: int(rawVersion[2]),
+	}
+}
+
+func (c *YubiConfig) Serial() uint32 {
+	rawSerial := c.tags[ConfigTagSerial]
+	if len(rawSerial) == 0 {
+		return 0
+	}
+
+	if len(rawSerial) < 3 {
+		return 0
+	}
+
+	return binary.BigEndian.Uint32(rawSerial)
+}
+
+type Version struct {
+	Major int
+	Minor int
+	Patch int
+}
+
+func (v Version) String() string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }

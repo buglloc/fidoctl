@@ -2,8 +2,6 @@ package fidoctl
 
 import (
 	"crypto/rand"
-	"encoding/binary"
-	"errors"
 	"fmt"
 
 	"github.com/buglloc/usbhid"
@@ -40,27 +38,9 @@ func (d *Device) OneShot(fn func(d *Device) error) error {
 	return fn(d)
 }
 
-func (d *Device) Serial() (uint32, error) {
-	cfg, err := d.Config()
-	if err != nil {
-		return 0, fmt.Errorf("reading config: %w", err)
-	}
-
-	rawSerial := cfg.Get(ConfigTagSerial)
-	if len(rawSerial) == 0 {
-		return 0, errors.New("no serial in config")
-	}
-
-	if len(rawSerial) < 3 {
-		return 0, fmt.Errorf("invalid serial length: %d", len(rawSerial))
-	}
-
-	return binary.BigEndian.Uint32(rawSerial), nil
-}
-
 func (d *Device) Reboot() error {
 	return d.OneShot(func(d *Device) error {
-		var cfg FidoConfig
+		var cfg YubiConfig
 		data, err := cfg.Set(ConfigTagReboot, nil).Marshal()
 		if err != nil {
 			return fmt.Errorf("marshal config: %w", err)
@@ -71,8 +51,8 @@ func (d *Device) Reboot() error {
 	})
 }
 
-func (d *Device) Config() (*FidoConfig, error) {
-	var cfg FidoConfig
+func (d *Device) YubiConfig() (*YubiConfig, error) {
+	var cfg YubiConfig
 	err := d.OneShot(func(d *Device) error {
 		data, err := d.SendAndReceive(cmdReadConfig, []byte{0x00})
 		if err != nil {
