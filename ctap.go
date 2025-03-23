@@ -75,7 +75,9 @@ func (c *CTAPPacket) FromHID(cid uint32, in []byte) (bool, error) {
 		switch in[4] & 0x7f {
 		case 0x3F:
 			// error
-			return true, &CTAPError{Code: in[7]}
+			return true, &CTAPError{
+				Code: CTAPErrCode(in[7]),
+			}
 		case 0x3B:
 			// keep-alive
 			return false, nil

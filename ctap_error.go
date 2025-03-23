@@ -4,8 +4,23 @@ import (
 	"fmt"
 )
 
+type CTAPErrCode uint8
+
+const (
+	CTAPErrCodeNone                CTAPErrCode = 0x00
+	CTAPErrCodeInvalidCommand      CTAPErrCode = 0x01
+	CTAPErrCodeInvalidParameter    CTAPErrCode = 0x02
+	CTAPErrCodeInvalidLen          CTAPErrCode = 0x03
+	CTAPErrCodeInvalidSequence     CTAPErrCode = 0x04
+	CTAPErrCodeMsgTimeout          CTAPErrCode = 0x05
+	CTAPErrCodeChannelBusy         CTAPErrCode = 0x06
+	CTAPErrCodeChannelLockRequired CTAPErrCode = 0x07
+	CTAPErrCodeChannelInvalid      CTAPErrCode = 0x08
+	CTAPErrCodeChannelUnknown      CTAPErrCode = 0x09
+)
+
 type CTAPError struct {
-	Code uint8
+	Code CTAPErrCode
 }
 
 func (e *CTAPError) Error() string {
@@ -14,23 +29,23 @@ func (e *CTAPError) Error() string {
 
 func (e *CTAPError) errString() string {
 	switch e.Code {
-	case 0x01:
+	case CTAPErrCodeInvalidCommand:
 		return "Invalid command"
-	case 0x02:
+	case CTAPErrCodeInvalidParameter:
 		return "Invalid parameter"
-	case 0x03:
+	case CTAPErrCodeInvalidLen:
 		return "Invalid length"
-	case 0x04:
+	case CTAPErrCodeInvalidSequence:
 		return "Invalid sequence"
-	case 0x05:
+	case CTAPErrCodeMsgTimeout:
 		return "Msg timeout"
-	case 0x06:
+	case CTAPErrCodeChannelBusy:
 		return "Channel busy"
-	case 0x0A:
+	case CTAPErrCodeChannelLockRequired:
 		return "Command requires channel lock"
-	case 0x0B:
+	case CTAPErrCodeChannelInvalid:
 		return "Invalid channel"
-	case 0x7F:
+	case CTAPErrCodeChannelUnknown:
 		return "unspecific error"
 	default:
 		return fmt.Sprintf("err 0x%x", e.Code)
