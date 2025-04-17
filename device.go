@@ -99,6 +99,10 @@ func (d *Device) Path() string {
 	return d.dev.Path()
 }
 
+func (d *Device) Location() string {
+	return d.dev.Location()
+}
+
 func (d *Device) String() string {
 	return d.dev.String()
 }
